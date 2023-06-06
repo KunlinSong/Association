@@ -82,12 +82,14 @@ class MapDense(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         dim = x.dim()
         assert dim in (2, 3), (
-            f'MapDense: Expected x to be 2-D or 3-D, but received {dim}-D')
+            f'{self.__class__.__name__}: Expected x to be 2-D or 3-D, but '
+            f'received {dim}-D')
         if not self.feature_last:
             x = x.transpose(-1, -2)
         shape = x.dim()
         assert (shape[-2:] == (self.map_units, self.in_features)), (
-            'MapDense: Expected x to be torch.Tensor of shape '
-            f'(*, {self.map_units}, {self.in_features}), but received {shape}')
+            f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
+            f' (*, {self.map_units}, {self.in_features}), but received {shape}'
+        )
         y = torch.einsum('...ij,jk->...ik', x, self.weight)
         return y + self.bias if self.bias is not None else y
