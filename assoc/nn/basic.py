@@ -4,7 +4,7 @@ import torch
 
 from assoc.types import *
 
-__all__ = ['Bias', 'MapDense', 'Weight']
+__all__ = ['Bias', 'GraphDense', 'Weight']
 
 
 class Weight:
@@ -26,7 +26,9 @@ class Weight:
                 dtype: Optional[torch.dtype] = None) -> Self:
         if len(size) == 1 and isinstance(size[0], Sequence):
             size = size[0]
-        return torch.nn.Parameter(torch.randn(*size, dtype=dtype) / 100)
+        weight = torch.nn.Parameter(torch.zeros(*size, dtype=dtype))
+        torch.nn.init.xavier_uniform_(weight)
+        return weight
 
 
 class Bias:
@@ -51,11 +53,11 @@ class Bias:
         return torch.nn.Parameter(torch.zeros(*size, dtype=dtype))
 
 
-class MapDense(torch.nn.Module):
+class GraphDense(torch.nn.Module):
     """Dense layer with map units.
     
     Attributes:
-        map_units (int): Number of map units.
+        nodes (int): Number of map units.
         in_features (int): Number of input features.
         out_features (int): Number of output features.
         feature_last (bool): Whether the last dimension of input is features.
@@ -64,7 +66,7 @@ class MapDense(torch.nn.Module):
     """
 
     def __init__(self,
-                 map_units: int,
+                 nodes: int,
                  in_features: int,
                  out_features: int,
                  *,
@@ -74,7 +76,7 @@ class MapDense(torch.nn.Module):
         super().__init__()
         self.weight = Weight(in_features, out_features, dtype=dtype)
         self.bias = Bias(out_features, dtype=dtype) if bias else None
-        self.map_units = map_units
+        self.nodes = nodes
         self.in_features = in_features
         self.out_features = out_features
         self.feature_last = feature_last
@@ -87,9 +89,9 @@ class MapDense(torch.nn.Module):
         if not self.feature_last:
             x = x.transpose(-1, -2)
         shape = x.dim()
-        assert (shape[-2:] == (self.map_units, self.in_features)), (
+        assert (shape[-2:] == (self.nodes, self.in_features)), (
             f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
-            f' (*, {self.map_units}, {self.in_features}), but received {shape}'
+            f' (*, {self.nodes}, {self.in_features}), but received {shape}'
         )
         y = torch.einsum('...ij,jk->...ik', x, self.weight)
         return y + self.bias if self.bias is not None else y

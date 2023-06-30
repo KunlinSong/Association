@@ -1,0 +1,29 @@
+# The mode of association layer.
+association_mode: null
+# association_mode: GC
+# association_mode: GCN
+# association_mode: GAT
+# association_mode: ICA
+
+# The threshold of adjacency matrix.
+# Must be set when association_mode is GC, GCN or GAT.
+#  Remove it when association_mode is ICA or null, 
+# in order to make the config saving work properly.
+adjacency_threshold: 200
+
+# The mode of RNN.
+RNN_mode: RNN
+# RNN_mode: LSTM
+# RNN_mode: GRU
+
+# The hidden units of RNN.
+RNN_hidden_units: 64
+
+# The time steps of RNN.
+input_time_steps: 24
+
+# The interval between end of input and start of prediction.
+predict_interval: 1
+
+# The number of time steps to be predicted.
+predict_time_steps: 8

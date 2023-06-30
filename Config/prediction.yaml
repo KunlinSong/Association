@@ -1,0 +1,8 @@
+# Pollutants attributes with their concentration factor.
+pollutants_attributes:
+    CO: 1.0
+    NO2: 1.0
+    O3: 1.0
+    PM10: 1.0
+    PM2.5: 1.0
+    SO2: 1.0

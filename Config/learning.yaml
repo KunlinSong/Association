@@ -1,0 +1,7 @@
+batch_size: 64
+initial_learning_rate: 1
+weight_decay: 1e-4
+max_epochs: 10000
+plateau_patience: 10
+learning_rate_decay: 0.1
+early_stopping_patience: 20

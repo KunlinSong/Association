@@ -1,0 +1,44 @@
+# The time format of the data.
+data_time_format: "%Y-%m-%d %H:%M:%S"
+
+# The cities to be predicted in the model evaluation.
+predict_cities:
+    # 2 Municipalities.
+    - Beijing
+    - Tianjin
+    # 26 cities.
+    - Anyang 
+    - Baoding
+    - Binzhou
+    - Cangzhou
+    - Changzhi
+    - Dezhou
+    - Handan
+    - Hebi
+    - Hengshui
+    - Heze
+    - Jiaozuo
+    - Jinan
+    - Jincheng
+    - Jining
+    - Kaifeng
+    - Langfang
+    - Liaocheng
+    - Puyang
+    - Shijiazhuang
+    - Taiyuan
+    - Tangshan
+    - Xingtai
+    - Xinxiang
+    - Yangquan
+    - Zhengzhou
+    - Zibo
+
+time attribute name: time
+longitude attribute name: longitude
+latitude attribute name: latitude
+elevation attribute name: elevation
+
+# The unit must be one of 'km' and 'm'.
+elevation_unit: "m"
+distance_unit: "km"

@@ -1,8 +1,9 @@
 import torch
-from torch_geometric.nn import ChebConv
 
 from assoc.types import *
 from assoc.nn.basic import *
+
+__all__ = ['GraphGRUCell', 'GraphLSTMCell', 'GraphRNNCell']
 
 
 def _get_gate_params(
@@ -19,17 +20,17 @@ def _get_gate_params(
             Bias(hidden_size, dtype=dtype))
 
 
-class MapLSTMCell(torch.nn.Module):
+class GraphLSTMCell(torch.nn.Module):
 
     def __init__(self,
-                 map_units: int,
+                 nodes: int,
                  input_size: int,
                  hidden_size: int,
                  *,
                  feature_last: bool = True,
                  dtype: Optional[torch.dtype] = None) -> None:
         super().__init__()
-        self.map_units = map_units
+        self.nodes = nodes
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.feature_last = feature_last
@@ -53,20 +54,20 @@ class MapLSTMCell(torch.nn.Module):
         if not self.feature_last:
             x = x.transpose(-1, -2)
         shape = x.dim()
-        assert (shape[-2:] == (self.map_units, self.input_size)), (
+        assert (shape[-2:] == (self.nodes, self.input_size)), (
             f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
-            f' (*, {self.map_units}, {self.input_size}), but received {shape}')
+            f' (*, {self.nodes}, {self.input_size}), but received {shape}')
 
         is_batched = (x.dim() == 3)
         if not is_batched:
             x = x.unsqueeze(0)
         if state is None:
             h = torch.zeros(x.shape[0],
-                            self.map_units,
+                            self.nodes,
                             self.hidden_size,
                             dtype=self.dtype)
             c = torch.zeros(x.shape[0],
-                            self.map_units,
+                            self.nodes,
                             self.hidden_size,
                             dtype=self.dtype)
         else:
@@ -91,17 +92,17 @@ class MapLSTMCell(torch.nn.Module):
                                           torch.squeeze(c, 0))
 
 
-class MapGRUCell(torch.nn.Module):
+class GraphGRUCell(torch.nn.Module):
 
     def __init__(self,
-                 map_units: int,
+                 nodes: int,
                  input_size: int,
                  hidden_size: int,
                  *,
                  feature_last: bool = True,
                  dtype: Optional[torch.dtype] = None) -> None:
         super().__init__()
-        self.map_units = map_units
+        self.nodes = nodes
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.feature_last = feature_last
@@ -123,16 +124,16 @@ class MapGRUCell(torch.nn.Module):
         if not self.feature_last:
             x = x.transpose(-1, -2)
         shape = x.dim()
-        assert (shape[-2:] == (self.map_units, self.input_size)), (
+        assert (shape[-2:] == (self.nodes, self.input_size)), (
             f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
-            f' (*, {self.map_units}, {self.input_size}), but received {shape}')
+            f' (*, {self.nodes}, {self.input_size}), but received {shape}')
 
         is_batched = (x.dim() == 3)
         if not is_batched:
             x = x.unsqueeze(0)
         if state is None:
             h = torch.zeros(x.shape[0],
-                            self.map_units,
+                            self.nodes,
                             self.hidden_size,
                             dtype=self.dtype)
         else:
@@ -148,20 +149,20 @@ class MapGRUCell(torch.nn.Module):
             torch.einsum('bmi,ih->bmh', x, self.w_n) +
             r * torch.einsum('bmi,ih->bmh', h, self.u_n) + self.b_n)
         h = (1 - z) * n + z * h
-        return (h,) if is_batched else (torch.squeeze(h, 0),)
+        return (h, ) if is_batched else (torch.squeeze(h, 0), )
 
 
-class MapRNNCell(torch.nn.Module):
+class GraphRNNCell(torch.nn.Module):
 
     def __init__(self,
-                 map_units: int,
+                 nodes: int,
                  input_size: int,
                  hidden_size: int,
                  *,
                  feature_last: bool = True,
                  dtype: Optional[torch.dtype] = None) -> None:
         super().__init__()
-        self.map_units = map_units
+        self.nodes = nodes
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.feature_last = feature_last
@@ -182,16 +183,16 @@ class MapRNNCell(torch.nn.Module):
         if not self.feature_last:
             x = x.transpose(-1, -2)
         shape = x.dim()
-        assert (shape[-2:] == (self.map_units, self.input_size)), (
+        assert (shape[-2:] == (self.nodes, self.input_size)), (
             f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
-            f' (*, {self.map_units}, {self.input_size}), but received {shape}')
+            f' (*, {self.nodes}, {self.input_size}), but received {shape}')
 
         is_batched = (x.dim() == 3)
         if not is_batched:
             x = x.unsqueeze(0)
         if state is None:
             h = torch.zeros(x.shape[0],
-                            self.map_units,
+                            self.nodes,
                             self.hidden_size,
                             dtype=self.dtype)
         else:
@@ -200,8 +201,7 @@ class MapRNNCell(torch.nn.Module):
         h = torch.tanh(
             torch.einsum('bmi,ih->bmh', x, self.w) +
             torch.einsum('bmi,ih->bmh', h, self.u) + self.b)
-        return (h,) if is_batched else (torch.squeeze(h, 0),)
+        return (h, ) if is_batched else (torch.squeeze(h, 0), )
 
 
-    
-
+RNNCellModule = Union[GraphGRUCell, GraphLSTMCell, GraphRNNCell]
