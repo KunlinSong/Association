@@ -41,4 +41,3 @@ elevation attribute name: elevation
 
 # The unit must be one of 'km' and 'm'.
 elevation_unit: "m"
-distance_unit: "km"

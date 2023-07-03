@@ -88,36 +88,28 @@ class Location:
 
     def __init__(self,
                  location_csv: str,
-                 config_hub: config.ConfigHub,
-                 elevation_unit: Literal['km', 'm'] = 'm') -> None:
+                 config_hub: config.ConfigHub) -> None:
         df = pd.read_csv(location_csv)
         self.location_matrix = df[config_hub.data_config.all_cities, [
             config_hub.basic_config.latitude_attribute_name, config_hub.basic_config.
             longitude_attribute_name, config_hub.basic_config.elevation_attribute_name
         ]].values
-        self.elevation_unit = elevation_unit
+        self.elevation_unit = config_hub.basic_config.elevation_unit
 
-    def _distance(self,
-                  i_coordinate: float,
-                  j_coordinate: float,
-                  distance_unit: Literal['km', 'm'] = 'km') -> float:
-        distance_flat = distance.distance(i_coordinate, j_coordinate).m
-        distance_elevation = (i_coordinate[2] - j_coordinate[2]) if (
-            self.elevation_unit
-            == 'm') else ((i_coordinate[2] - j_coordinate[2]) * 1000)
-        distance = math.sqrt(distance_flat**2 + distance_elevation**2)
-        return distance if (distance_unit == 'm') else (distance / 1000)
+    def _distance(self, i_location, j_location):
+        distance_flat = distance.distance(i_location, j_location).m
+        distance_elevation = i_location[2] - j_location[2]
+        distance_elevation = distance_elevation if (
+            self.elevation_unit == 'm') else (distance_elevation * 1000)
+        return math.sqrt(distance_flat ** 2 + distance_elevation ** 2)
 
-    def distance_matrix(self,
-                        distance_unit: Literal['km',
-                                               'm'] = 'km') -> np.ndarray:
+    def distance_matrix(self) -> np.ndarray:
         co1 = self.location_matrix.repeat(len(self.location_matrix), axis=0)
         co2 = np.tile(self.location_matrix, (len(self.location_matrix), 1))
         city_num = self.location_matrix.shape[0]
         distance_array = np.zeros((city_num, city_num))
         for num, (i_co, j_co) in enumerate(zip(co1, co2)):
-            distance_ij = self._distance(i_co, j_co, self.elevation_unit,
-                                         distance_unit)
+            distance_ij = self._distance(i_co, j_co)
             distance_array[num // city_num, num % city_num] = distance_ij
         return distance_array
 

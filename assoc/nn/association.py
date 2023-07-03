@@ -14,10 +14,10 @@ class GC(torch.nn.Module):
     def __init__(self,
                  nodes: int,
                  in_channels: int,
+                 add_channels: int,
                  dist_mat: torch.Tensor,
                  *,
                  dist_threshold: Union[int, float] = 200,
-                 out_channels: int = 1,
                  k: int = 2,
                  eps: float = 1e-5,
                  feature_last: bool = True,
@@ -25,13 +25,13 @@ class GC(torch.nn.Module):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
-        self.out_channels = out_channels
+        self.add_channels = add_channels
         self.k = k
         self.feature_last = feature_last
         self.dtype = dtype
         within_threshold = (dist_mat > 0) & (dist_mat < dist_threshold)
         self.edge_mat = within_threshold / (dist_mat + eps)
-        self.conv = ChebConv(self.in_channels, self.out_channels, K=k)
+        self.conv = ChebConv(in_channels, add_channels, K=k)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         dim = x.dim()
@@ -52,7 +52,7 @@ class GC(torch.nn.Module):
 
         x_gcn = x.reshape(batch_size * self.nodes, self.in_channels)
         x_gcn = F.sigmoid(self.conv(x_gcn, self.edge_mat))
-        x_gcn = x_gcn.reshape(batch_size, self.nodes, self.out_channels)
+        x_gcn = x_gcn.reshape(batch_size, self.nodes, self.add_channels)
 
         y = torch.cat((x, x_gcn), dim=-1)
         return y if is_batched else y.squeeze(0)
@@ -63,6 +63,7 @@ class GCN(torch.nn.Module):
     def __init__(self,
                  nodes: int,
                  in_channels: int,
+                 out_channels: int,
                  dist_mat: torch.Tensor,
                  *,
                  dist_threshold: float = 200,
@@ -71,6 +72,7 @@ class GCN(torch.nn.Module):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
+        self.out_channels = out_channels
         self.feature_last = feature_last
         self.dtype = dtype
         self.adj_mat = (
@@ -80,7 +82,7 @@ class GCN(torch.nn.Module):
         self.neighbors = self.adj_mat.sum(dim=-1, keepdims=True)
         self.projection = GraphDense(nodes=nodes,
                                      in_features=in_channels,
-                                     out_features=in_channels,
+                                     out_features=out_channels,
                                      feature_last=True,
                                      dtype=dtype)
 
@@ -107,6 +109,7 @@ class GAT(torch.nn.Module):
     def __init__(self,
                  nodes: int,
                  in_channels: int,
+                 hidden_channels: int,
                  dist_mat: torch.Tensor,
                  *,
                  dist_threshold: float = 200,
@@ -116,6 +119,7 @@ class GAT(torch.nn.Module):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
+        self.hidden_channels = hidden_channels
         self.feature_last = feature_last
         self.dtype = dtype
         self.adj_mat = (
@@ -125,11 +129,11 @@ class GAT(torch.nn.Module):
 
         self.projection = GraphDense(nodes=nodes,
                                      in_features=in_channels,
-                                     out_features=in_channels,
+                                     out_features=hidden_channels,
                                      feature_last=True,
                                      dtype=dtype)
         self.a = GraphDense(nodes=nodes,
-                            in_features=self.in_channels * 2,
+                            in_features=self.hidden_channels * 2,
                             out_features=1,
                             feature_last=True,
                             bias=False,
@@ -154,12 +158,12 @@ class GAT(torch.nn.Module):
 
         x_concat = torch.cat([
             x.repeat(1, 1, self.nodes).reshape(-1, self.nodes**2,
-                                               self.in_channels),
+                                               self.hidden_channels),
             x.repeat(1, self.nodes, 1)
         ],
                              dim=-1)
         x_concat = x_concat.reshape(-1, self.nodes, self.nodes,
-                                    self.in_channels * 2)
+                                    self.hidden_channels * 2)
         x_activated = self.leakyrelu(self.a(x_concat)).reshape(
             -1, self.nodes, self.nodes)
         attention_mat = torch.where(self.adj_mat > 0, x_activated, -1e15)
@@ -168,10 +172,11 @@ class GAT(torch.nn.Module):
         return y if is_batched else y.squeeze(0)
 
 
-class ICA(torch.nn.Module):
+class INA(torch.nn.Module):
     def __init__(self,
                  nodes: int,
                  in_channels: int,
+                 hidden_channels: int,
                  location_mat: torch.Tensor,
                  time_features_index: Sequence[int],
                  *,
@@ -181,6 +186,7 @@ class ICA(torch.nn.Module):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
+        self.hidden_channels = hidden_channels
         self.feature_last = feature_last
         self.dtype = dtype
         self.location_mat = location_mat
@@ -199,7 +205,8 @@ class ICA(torch.nn.Module):
                             feature_last=True,
                             dtype=dtype)
         self.leakyrelu = torch.nn.LeakyReLU(alpha)
-        self.time_mask_transformer = torch.nn.Linear(len(time_features_index), nodes ** 2, dtype=dtype)
+        self.time_mask_transformer_hidden = torch.nn.Linear(len(time_features_index), hidden_channels, dtype=dtype)
+        self.time_mask_transformer_output = torch.nn.Sequential(hidden_channels, nodes ** 2, torch.nn.Softmax(dim=-1))
 
     def forward(self, x: torch.Tensor):
         dim = x.dim()
@@ -215,7 +222,8 @@ class ICA(torch.nn.Module):
         is_batched = dim == 3
         x = x if is_batched else x.unsqueeze(0)
         x_time = x[:, 0, self.time_features_index]
-        time_mask = self.time_mask_transformer(x_time)
+        time_mask = self.time_mask_transformer_hidden(x_time)
+        time_mask = self.time_mask_transformer_output(time_mask)
         time_mask = F.sigmoid(time_mask).reshape(-1, self.nodes, self.nodes)
 
         assoc_mat = self.a(self.location_cat_mat)

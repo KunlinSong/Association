@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 from typing import overload
 
 import yaml
@@ -62,15 +63,40 @@ class ModelConfig(Config):
             return super().save(dirname=path, filename='model.yaml')
         else:
             return super().save(path=path)
+    
+    @property
+    def association_mode(self) -> str:
+        if self._config["association_mode"] is None:
+            return None
+        else:
+            return list(self._config["association_mode"].keys())[0]
+
+    @property
+    def association_channels(self) -> int:
+        if self.association_mode is None:
+            return None
+        else:
+            return self._config["association_mode"][self.association_mode]
 
     @property
     def association(self) -> association.AssociationModule:
-        return getattr(association, self._config["association"].upper())
+        if self.association_mode is None:
+            return None
+        else:
+            return getattr(association, self.association_mode.upper())
+
+    @property
+    def rnn_mode(self) -> str:
+        return list(self._config['RNN_mode'].keys())[0]
+    
+    @property
+    def rnn_hidden_units(self) -> int:
+        return self._config['RNN_mode'][self.rnn_mode]
 
     @property
     def rnn_cell(self) -> rnn_cell.RNNCellModule:
         return getattr(rnn_cell,
-                       f'Graph{self._config["RNN_mode"].upper()}Cell')
+                       f'Graph{self.rnn_mode.upper()}Cell')
 
     @property
     def rnn_hidden_units(self) -> int:
@@ -90,8 +116,14 @@ class ModelConfig(Config):
 
     @property
     def adjacency_threshold(self) -> int:
-        return self._config['adjacency_threshold']
-
+        match = re.match(r"(-?\d+)([a-zA-Z]+)", self._config['adjacency_threshold'])
+        number, unit = match.groups()
+        if unit == 'm':
+            return float(number)
+        elif unit == 'km':
+            return float(number) * 1000
+        else:
+            raise ValueError(f'Unknown unit "{unit}" for adjacency threshold.')
 
 class DataConfig(Config):
 
@@ -186,10 +218,6 @@ class BasicConfig(Config):
     @property
     def elevation_unit(self) -> str:
         return self._config['elevation_unit']
-
-    @property
-    def distance_unit(self) -> str:
-        return self._config['distance_unit']
 
 
 class LearningConfig(Config):
