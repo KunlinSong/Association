@@ -1,3 +1,36 @@
+# The cities to be predicted in the model evaluation.
+prediction_cities:
+    # 2 Municipalities.
+    - Beijing
+    - Tianjin
+    # 26 cities.
+    - Anyang 
+    - Baoding
+    - Binzhou
+    - Cangzhou
+    - Changzhi
+    - Dezhou
+    - Handan
+    - Hebi
+    - Hengshui
+    - Heze
+    - Jiaozuo
+    - Jinan
+    - Jincheng
+    - Jining
+    - Kaifeng
+    - Langfang
+    - Liaocheng
+    - Puyang
+    - Shijiazhuang
+    - Taiyuan
+    - Tangshan
+    - Xingtai
+    - Xinxiang
+    - Yangquan
+    - Zhengzhou
+    - Zibo
+
 # Pollutants attributes with their concentration factor.
 pollutants_attributes:
     CO: 1.0

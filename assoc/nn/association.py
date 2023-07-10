@@ -5,10 +5,9 @@ from torch_geometric.nn import ChebConv
 from assoc.types import *
 from assoc.nn.basic import *
 
-__all__ = ['GC']
+__all__ = ['AssociationModule', 'GAT', 'GC', 'GCN', 'INA']
 
 
-# TODO: Make attention to the unit of length between cities. It is km now.
 class GC(torch.nn.Module):
 
     def __init__(self,
@@ -80,11 +79,9 @@ class GCN(torch.nn.Module):
             (dist_mat < dist_threshold)).to(dtype if dtype else torch.float)
         self.adj_mat.fill_diagonal_(1)
         self.neighbors = self.adj_mat.sum(dim=-1, keepdims=True)
-        self.projection = GraphDense(nodes=nodes,
-                                     in_features=in_channels,
-                                     out_features=out_channels,
-                                     feature_last=True,
-                                     dtype=dtype)
+        self.projection = torch.nn.Linear(in_features=in_channels, 
+                                          out_features=out_channels, 
+                                          dtype=dtype)
 
     def forward(self, x: torch.Tensor):
         dim = x.dim()
@@ -127,17 +124,13 @@ class GAT(torch.nn.Module):
             (dist_mat < dist_threshold)).to(dtype if dtype else torch.float)
         self.adj_mat.fill_diagonal_(1)
 
-        self.projection = GraphDense(nodes=nodes,
-                                     in_features=in_channels,
-                                     out_features=hidden_channels,
-                                     feature_last=True,
-                                     dtype=dtype)
-        self.a = GraphDense(nodes=nodes,
-                            in_features=self.hidden_channels * 2,
-                            out_features=1,
-                            feature_last=True,
-                            bias=False,
-                            dtype=dtype)
+        self.projection = torch.nn.Linear(in_features=in_channels,
+                                          out_features=hidden_channels,
+                                          dtype=dtype)
+        self.a = torch.nn.Linear(in_features=hidden_channels * 2,
+                                 out_features=1,
+                                 bias=False,
+                                 dtype=dtype)
         self.leakyrelu = torch.nn.LeakyReLU(alpha)
 
     def forward(self, x: torch.Tensor):
@@ -199,14 +192,13 @@ class INA(torch.nn.Module):
         ],
                              dim=-1)
         
-        self.a = GraphDense(nodes=nodes,
-                            in_features=len(time_features_index) * 2,
-                            out_features=1,
-                            feature_last=True,
-                            dtype=dtype)
+        self.a = torch.nn.Linear(in_features=location_mat.shape[-1] * 2, 
+                                 out_features=hidden_channels, 
+                                 dtype=dtype)
         self.leakyrelu = torch.nn.LeakyReLU(alpha)
-        self.time_mask_transformer_hidden = torch.nn.Linear(len(time_features_index), hidden_channels, dtype=dtype)
-        self.time_mask_transformer_output = torch.nn.Sequential(hidden_channels, nodes ** 2, torch.nn.Softmax(dim=-1))
+        self.time_mask_transformer = torch.nn.Linear(len(time_features_index), 
+                                                     hidden_channels, 
+                                                     dtype=dtype)
 
     def forward(self, x: torch.Tensor):
         dim = x.dim()
@@ -221,16 +213,16 @@ class INA(torch.nn.Module):
             f' (*, {self.nodes}, {self.in_channels}), but received {shape}')
         is_batched = dim == 3
         x = x if is_batched else x.unsqueeze(0)
+
         x_time = x[:, 0, self.time_features_index]
-        time_mask = self.time_mask_transformer_hidden(x_time)
-        time_mask = self.time_mask_transformer_output(time_mask)
-        time_mask = F.sigmoid(time_mask).reshape(-1, self.nodes, self.nodes)
+        time_mask = self.time_mask_transformer(x_time)
+        time_mask = F.sigmoid(time_mask)
 
         assoc_mat = self.a(self.location_cat_mat)
-        assoc_mat = assoc_mat.reshape(-1, self.nodes, self.nodes)
+        assoc_mat = assoc_mat * time_mask
         assoc_mat = self.leakyrelu(assoc_mat)
-        assoc_mat = self.leakyrelu(assoc_mat * time_mask)
+        assoc_mat = assoc_mat.reshape(-1, self.nodes, self.nodes)
         return F.softmax(assoc_mat, dim=-1)
 
 
-AssociationModule = Union[GC, GCN, GAT]
+AssociationModule = Union[GC, GCN, GAT, INA]

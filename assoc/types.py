@@ -1,6 +1,7 @@
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterable,
     Literal,
     NewType,
@@ -10,5 +11,5 @@ from typing import (
     Union,
 )
 
-__all__ = ['Any', 'Callable', 'Iterable', 'Literal', 
+__all__ = ['Any', 'Callable', 'Dict', 'Iterable', 'Literal', 
            'Optional', 'Self', 'Sequence', 'Union']

@@ -69,17 +69,17 @@ class ModelConfig(Config):
         if self._config["association_mode"] is None:
             return None
         else:
-            return list(self._config["association_mode"].keys())[0]
+            return list(self._config["association_mode"].keys())[-1]
 
     @property
-    def association_channels(self) -> int:
+    def association_channels(self) -> Optional[int]:
         if self.association_mode is None:
             return None
         else:
-            return self._config["association_mode"][self.association_mode]
+            return int(self._config["association_mode"][self.association_mode])
 
     @property
-    def association(self) -> association.AssociationModule:
+    def association_layer(self) -> association.AssociationModule:
         if self.association_mode is None:
             return None
         else:
@@ -87,11 +87,11 @@ class ModelConfig(Config):
 
     @property
     def rnn_mode(self) -> str:
-        return list(self._config['RNN_mode'].keys())[0]
+        return list(self._config['RNN_mode'].keys())[-1]
     
     @property
     def rnn_hidden_units(self) -> int:
-        return self._config['RNN_mode'][self.rnn_mode]
+        return int(self._config['RNN_mode'][self.rnn_mode])
 
     @property
     def rnn_cell(self) -> rnn_cell.RNNCellModule:
@@ -99,16 +99,12 @@ class ModelConfig(Config):
                        f'Graph{self.rnn_mode.upper()}Cell')
 
     @property
-    def rnn_hidden_units(self) -> int:
-        return self._config['RNN_hidden_units']
-
-    @property
     def input_time_steps(self) -> int:
-        return self._config['input_time_steps']
+        return int(self._config['input_time_steps'])
 
     @property
     def predict_interval(self) -> int:
-        return self._config['predict_interval']
+        return int(self._config['predict_interval'])
 
     @property
     def predict_time_steps(self) -> int:
@@ -117,11 +113,13 @@ class ModelConfig(Config):
     @property
     def adjacency_threshold(self) -> int:
         match = re.match(r"(-?\d+)([a-zA-Z]+)", self._config['adjacency_threshold'])
-        number, unit = match.groups()
+        num, unit = match.groups()
+        num = float(num)
+        unit = unit.lower()
         if unit == 'm':
-            return float(number)
+            return num
         elif unit == 'km':
-            return float(number) * 1000
+            return num * 1000
         else:
             raise ValueError(f'Unknown unit "{unit}" for adjacency threshold.')
 
@@ -147,30 +145,34 @@ class DataConfig(Config):
     @property
     def targets(self) -> Sequence[str]:
         return self._config['targets']
+    
+    @property
+    def dataset_split(self) -> Dict[str, float]:
+        return self._config['dataset_split']
 
     @property
     def _dataset_ratio_sum(self) -> float:
-        return sum(self._config['dataset_split'].values())
+        return sum(self.dataset_split.values())
 
     @property
     def _training_set_ratio(self) -> float:
-        return (self._config['dataset_split']['training'] /
+        return (float(self.dataset_split['training']) /
                 self._dataset_ratio_sum)
 
     @property
     def _validation_set_ratio(self) -> float:
-        return (self._config['dataset_split']['validation'] /
+        return (float(self.dataset_split['validation']) /
                 self._dataset_ratio_sum)
 
     @property
     def _test_set_ratio(self) -> float:
-        return (self._config['dataset_split']['test'] /
+        return (float(self.dataset_split['test']) /
                 self._dataset_ratio_sum)
 
-    def get_train_size(self, len_data: int) -> int:
+    def get_training_size(self, len_data: int) -> int:
         return int(len_data * self._training_set_ratio)
 
-    def get_val_size(self, len_data: int) -> int:
+    def get_validation_size(self, len_data: int) -> int:
         return int(len_data * self._validation_set_ratio)
 
     def get_test_size(self, len_data: int) -> int:
@@ -187,17 +189,20 @@ class BasicConfig(Config):
             return super().save(dirname=path, filename='basic.yaml')
         else:
             return super().save(path=path)
+    
+    @property
+    def data_time_format(self) -> str:
+        return self._config['data_time_format']
 
     def strptime(self, time_str: str) -> datetime.datetime:
-        return datetime.datetime.strptime(time_str,
-                                          self._config['data_time_format'])
+        return datetime.datetime.strptime(time_str, self.data_time_format)
 
     def strftime(self, time: datetime.datetime) -> str:
-        return time.strftime(self._config['data_time_format'])
+        return time.strftime(self.data_time_format)
 
     @property
-    def time_attributes_name(self) -> str:
-        return self._config['time_attributes_name']
+    def time_attribute_name(self) -> str:
+        return self._config['time_attribute_name']
 
     @property
     def longitude_attribute_name(self) -> str:
@@ -212,13 +217,12 @@ class BasicConfig(Config):
         return self._config['elevation_attribute_name']
 
     @property
-    def predict_cities(self) -> Sequence[str]:
-        return self._config['predict_cities']
-
-    @property
     def elevation_unit(self) -> str:
         return self._config['elevation_unit']
 
+    @property
+    def dtype(self) -> str:
+        return self._config['dtype']
 
 class LearningConfig(Config):
 
@@ -233,31 +237,31 @@ class LearningConfig(Config):
 
     @property
     def initial_learning_rate(self) -> float:
-        return self._config['initial_learning_rate']
+        return float(self._config['initial_learning_rate'])
 
     @property
     def learning_rate_decay(self) -> float:
-        return self._config['learning_rate_decay']
+        return float(self._config['learning_rate_decay'])
 
     @property
     def plateau_patience(self) -> int:
-        return self._config['plateau_patience']
+        return int(self._config['plateau_patience'])
 
     @property
     def early_stopping_patience(self) -> int:
-        return self._config['early_stopping_patience']
+        return int(self._config['early_stopping_patience'])
 
     @property
     def weight_decay(self) -> float:
-        return self._config['weight_decay']
+        return float(self._config['weight_decay'])
 
     @property
     def batch_size(self) -> int:
-        return self._config['batch_size']
+        return int(self._config['batch_size'])
 
     @property
     def max_epochs(self) -> int:
-        return self._config['max_epochs']
+        return int(self._config['max_epochs'])
 
 
 class PredictionConfig(Config):
@@ -274,6 +278,10 @@ class PredictionConfig(Config):
     @property
     def pollutants_attributes(self) -> Sequence[str]:
         return self._config['pollutants_attributes']
+
+    @property
+    def prediction_cities(self) -> Sequence[str]:
+        return self._config['prediction_cities']
 
     @property
     def co_factor(self) -> float:
@@ -311,7 +319,7 @@ class ConfigHub:
             os.path.join(config_directory, 'learning.yaml'))
         self.model_config = ModelConfig(
             os.path.join(config_directory, 'model.yaml'))
-        self.prediction = PredictionConfig(
+        self.prediction_config = PredictionConfig(
             os.path.join(config_directory, 'prediction.yaml'))
 
     def __eq__(self, other: "ConfigHub") -> bool:
@@ -319,8 +327,10 @@ class ConfigHub:
                 and (self.model_config == other.model_config))
 
     def save(self, directory: str) -> None:
+        if not os.path.exists:
+            os.makedirs(directory)
         self.basic_config.save(directory)
         self.data_config.save(directory)
         self.learning_config.save(directory)
         self.model_config.save(directory)
-        self.prediction.save(directory)
+        self.prediction_config.save(directory)
