@@ -127,4 +127,10 @@ def main():
         log_hub.training_log.append(epoch, train_loss, val_loss)
         log_hub.tensorboard_log.append_loss(epoch, train_loss, val_loss)
 
+        if val_loss < best_val_loss:
+            best_epoch = epoch
+            best_train_loss = train_loss
+            best_val_loss = val_loss
+            log_hub.model_log.save_best_state_dict(model.state_dict())
+
     print('Training Finished!')
