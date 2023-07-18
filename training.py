@@ -3,6 +3,7 @@ import os
 import statistics
 from contextlib import suppress
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
@@ -135,3 +136,46 @@ def main():
         log_hub.model_log.save_latest_state_dict(model.state_dict())
 
     print('Training Finished!')
+
+    # test
+    print('Start Testing...')
+    true_values = []
+    pred_values = []
+    dataset.to_state('test')
+    with torch.no_grad():
+        for source_inputs, source_targets in test_loader:
+            inputs = source_inputs.to(dtype).to(device)
+            targets = source_targets.to(dtype).to(device)
+            outputs = model(inputs)
+            true_values.append(targets[:, -1, :, :].cpu().numpy())
+            pred_values.append(outputs[:, -1, :, :].cpu().numpy())
+    true_values = np.concatenate(true_values, axis=0)
+    pred_values = np.concatenate(pred_values, axis=0)
+    print('Testing Finished!')
+    print('Saving Results...')
+    for idx, (true_value,
+              pred_value) in enumerate(zip(true_values, pred_values)):
+        for node_idx, (true_node_value, pred_node_value) in enumerate(
+                zip(true_value, pred_value)):
+            node = config_hub.data_config.all_cities[node_idx]
+            for target_idx, (true_target_value,
+                             pred_target_value) in enumerate(
+                                 zip(true_node_value, pred_node_value)):
+                target = config_hub.data_config.attributes[target_idx]
+                log_hub.tensorboard_log.append_test(idx, target, node,
+                                                    true_target_value,
+                                                    pred_target_value)
+                log_hub.test_log[target][node].append(true_target_value,
+                                                      pred_target_value)
+    for node in config_hub.data_config.all_cities:
+        for target in config_hub.data_config.attributes:
+            log_hub.test_log[target][node].plot().save_hexbin()
+            log_hub.test_log[target][node].plot().save_plot()
+        log_hub.test_log[target].plot().save_hexbin()
+        log_hub.test_log[target].plot().save_plot()
+    log_hub.test_log.plot().save_hexbin()
+    log_hub.test_log.plot().save_plot()
+    print('All Finished!')
+
+if __name__ == '__main__':
+    main()
