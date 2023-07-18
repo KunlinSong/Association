@@ -132,5 +132,6 @@ def main():
             best_train_loss = train_loss
             best_val_loss = val_loss
             log_hub.model_log.save_best_state_dict(model.state_dict())
+        log_hub.model_log.save_latest_state_dict(model.state_dict())
 
     print('Training Finished!')
