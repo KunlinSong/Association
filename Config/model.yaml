@@ -5,35 +5,33 @@
 # If the mode is not null, using dict to set the association mode.
 # The key is the name of the mode, and the value is the number of channels.
 # If the value of the mode is null, the channel will set to default.
-association_mode: null
+association mode: null
 #  If the mode is GC, the value means the number of channels to add to the 
 # input. Default to 1.
-## association_mode: GC: 1
+## association mode: GC: 1
 #  If the mode is GCN, the value means the number of output channels.
 # Default to the number of input channels.
-## association_mode: GCN: null
+## association mode: GCN: null
 #  If the mode is GAT or INA, the value means the number of hidden channels.
 # Default to 32.
-## association_mode: GAT: 32
-# association_mode: INA: 32
+## association mode: GAT: 32
+# association mode: INA: 32
 
 # The threshold of adjacency matrix.
-# Must be set when association_mode is GC, GCN or GAT.
-#  Remove it when association_mode is ICA or null, in order to make the 
-# config saving work properly.
-adjacency_threshold: 200km
+# Must be set when association mode is GC, GCN or GAT.
+adjacency threshold: 200km
 
 # The mode of RNNs.
 # The key is the name of the mode, and the value is the number of hidden units.
-RNN_mode: RNN: 64
-## RNN_mode: LSTM: 64
-## RNN_mode: GRU: 64
+RNN mode: RNN: 64
+## RNN mode: LSTM: 64
+## RNN mode: GRU: 64
 
 # The time steps of RNN.
-input_time_steps: 24
+input time steps: 24
 
 # The interval between end of input and start of prediction.
-predict_interval: 1
+predict interval: 1
 
 # The number of time steps to be predicted.
-predict_time_steps: 8
+predict time steps: 8

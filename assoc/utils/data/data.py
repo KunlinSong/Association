@@ -1,4 +1,5 @@
 import datetime
+import math
 import os
 from typing import overload
 
@@ -10,7 +11,6 @@ from geopy import Point, distance
 import assoc.utils.config as config
 import assoc.utils.data.attributes as attributes
 from assoc.types import *
-
 
 __all__ = ['CityData', 'Data', 'Location', 'LocationCollection', 'TimeDict']
 
@@ -111,7 +111,9 @@ class Location:
         self.point = Point(self.latitude, self.longitude, self.elevation)
 
     def distance_to(self, other: 'Location') -> float:
-        return distance.distance(self.point, other.point).m
+        flat_dist = distance.distance(self.point, other.point).m
+        elevation_diff = abs(self.elevation - other.elevation)
+        return math.sqrt(flat_dist**2 + elevation_diff**2)
 
 
 class LocationCollection:
@@ -125,6 +127,14 @@ class LocationCollection:
             elevation_attribute_name
         ]].values
         self.elevation_unit = config_hub.basic_config.elevation_unit
+        if self.elevation_unit == 'm':
+            pass
+        elif self.elevation_unit == 'km':
+            self.locations[:, 2] *= 1000
+        else:
+            raise ValueError(
+                f'Unknown elevation unit in config: {self.elevation_unit}')
+        self.location_mat = self.locations.copy()
         self.distance_matrix = self._get_distance_matrix()
 
     def _get_distance_matrix(self) -> np.ndarray:
@@ -151,9 +161,12 @@ class Data:
         self.data[self.time_attributes] = self.data[
             self.time_transformer.basic_config.time_attribute_name].apply(
                 self._get_value)
-        self.data = self.data.drop(columns=['time'])
+        self.data.drop(self.time_transformer.basic_config.time_attribute_name,
+                       axis=1,
+                       inplace=True)
+        self.time_attr_idx = self.data.columns.get_loc(self.time_attributes).tolist()
 
-    def _get_value(self, time) -> float:
+    def _get_value(self, time) -> list[float]:
         self.time_transformer.update_time(time)
         values = [
             getattr(self.time_transformer, attribute)()
@@ -170,11 +183,14 @@ class CityData:
         self.time_transformer = attributes.TimeTransformer(
             time_dict.config_hub)
         self.city_data = Data(self.csv_data, self.time_transformer)
+        self.time_attr_idx = self.city_data.time_attr_idx
 
     def __getitem__(self, time: str) -> tuple[np.ndarray, np.ndarray]:
         input_time, predict_time = self.time_dict[time]
         input_data = self.city_data.data[self.csv_data['time'].isin(
-            input_time)].values
+            input_time)]
+        input_data = input_data.drop(columns=['time']).values
         predict_data = self.city_data.data[self.csv_data['time'].isin(
-            predict_time)].values
+            predict_time)]
+        predict_data = predict_data.drop(columns=['time']).values
         return input_data, predict_data

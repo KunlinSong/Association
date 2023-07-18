@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import torch
 import torch.utils.data as data
 
@@ -22,6 +23,7 @@ class Dataset(data.Dataset):
         )
         self.state = None
         self.dataset = None
+        self.time_attr_idx = self.city_data_lst[0].time_attr_idx
 
     def to_state(self, state: Literal['training', 'validation',
                                       'test']) -> None:
@@ -67,8 +69,13 @@ class Dataset(data.Dataset):
         city_data_lst = [city_data[key] for city_data in self.city_data_lst]
         input_lst = [city_data[0] for city_data in city_data_lst]
         target_lst = [city_data[1] for city_data in city_data_lst]
+        target_data = []
+        for i in range(self.config_hub.model_config.input_time_steps):
+            add_data = target_lst[i:i + self.config_hub.model_config.
+                                  predict_time_steps]
+            target_data.append(np.mean(np.array(add_data), axis=0))
         input_data = torch.tensor(input_lst, dtype=self.dtype)
-        target_data = torch.tensor(target_lst, dtype=self.dtype)
+        target_data = torch.tensor(target_data, dtype=self.dtype)
         return input_data, target_data
 
     def __len__(self):

@@ -13,10 +13,10 @@ class GC(torch.nn.Module):
     def __init__(self,
                  nodes: int,
                  in_channels: int,
-                 add_channels: int,
+                 add_channels: Optional[int],
                  dist_mat: torch.Tensor,
                  *,
-                 dist_threshold: Union[int, float] = 200,
+                 dist_threshold: Union[int, float] = 2e5,
                  k: int = 2,
                  eps: float = 1e-5,
                  feature_last: bool = True,
@@ -24,7 +24,7 @@ class GC(torch.nn.Module):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
-        self.add_channels = add_channels
+        self.add_channels = add_channels if add_channels is not None else 1
         self.k = k
         self.feature_last = feature_last
         self.dtype = dtype
@@ -62,16 +62,17 @@ class GCN(torch.nn.Module):
     def __init__(self,
                  nodes: int,
                  in_channels: int,
-                 out_channels: int,
+                 out_channels: Optional[int],
                  dist_mat: torch.Tensor,
                  *,
-                 dist_threshold: float = 200,
+                 dist_threshold: float = 2e5,
                  feature_last: bool = True,
                  dtype: Optional[torch.dtype] = None):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
-        self.out_channels = out_channels
+        self.out_channels = (out_channels
+                             if out_channels is not None else in_channels)
         self.feature_last = feature_last
         self.dtype = dtype
         self.adj_mat = (
@@ -79,9 +80,10 @@ class GCN(torch.nn.Module):
             (dist_mat < dist_threshold)).to(dtype if dtype else torch.float)
         self.adj_mat.fill_diagonal_(1)
         self.neighbors = self.adj_mat.sum(dim=-1, keepdims=True)
-        self.projection = torch.nn.Linear(in_features=in_channels, 
-                                          out_features=out_channels, 
+        self.projection = torch.nn.Linear(in_features=in_channels,
+                                          out_features=out_channels,
                                           dtype=dtype)
+        torch.nn.init.xavier_uniform_(self.projection.weight)
 
     def forward(self, x: torch.Tensor):
         dim = x.dim()
@@ -106,17 +108,17 @@ class GAT(torch.nn.Module):
     def __init__(self,
                  nodes: int,
                  in_channels: int,
-                 hidden_channels: int,
+                 hidden_channels: Optional[int],
                  dist_mat: torch.Tensor,
                  *,
-                 dist_threshold: float = 200,
+                 dist_threshold: float = 2e5,
                  feature_last: bool = True,
                  dtype: Optional[torch.dtype] = None,
                  alpha: float = 0.01):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
-        self.hidden_channels = hidden_channels
+        self.hidden_channels = hidden_channels if hidden_channels else 32
         self.feature_last = feature_last
         self.dtype = dtype
         self.adj_mat = (
@@ -132,6 +134,8 @@ class GAT(torch.nn.Module):
                                  bias=False,
                                  dtype=dtype)
         self.leakyrelu = torch.nn.LeakyReLU(alpha)
+        torch.nn.init.xavier_uniform_(self.projection.weight)
+        torch.nn.init.xavier_uniform_(self.a.weight)
 
     def forward(self, x: torch.Tensor):
         dim = x.dim()
@@ -166,10 +170,11 @@ class GAT(torch.nn.Module):
 
 
 class INA(torch.nn.Module):
+
     def __init__(self,
                  nodes: int,
                  in_channels: int,
-                 hidden_channels: int,
+                 hidden_channels: Optional[int],
                  location_mat: torch.Tensor,
                  time_features_index: Sequence[int],
                  *,
@@ -179,26 +184,27 @@ class INA(torch.nn.Module):
         super().__init__()
         self.nodes = nodes
         self.in_channels = in_channels
-        self.hidden_channels = hidden_channels
+        self.hidden_channels = hidden_channels if hidden_channels else 32
         self.feature_last = feature_last
         self.dtype = dtype
         self.location_mat = location_mat
         self.time_features_index = time_features_index
 
         self.location_cat_mat = torch.cat([
-            location_mat.repeat(1, nodes).reshape(nodes**2,
-                                               -1),
+            location_mat.repeat(1, nodes).reshape(nodes**2, -1),
             location_mat.repeat(nodes, 1)
         ],
-                             dim=-1)
-        
-        self.a = torch.nn.Linear(in_features=location_mat.shape[-1] * 2, 
-                                 out_features=hidden_channels, 
+                                          dim=-1)
+
+        self.a = torch.nn.Linear(in_features=location_mat.shape[-1] * 2,
+                                 out_features=hidden_channels,
                                  dtype=dtype)
         self.leakyrelu = torch.nn.LeakyReLU(alpha)
-        self.time_mask_transformer = torch.nn.Linear(len(time_features_index), 
-                                                     hidden_channels, 
+        self.time_mask_transformer = torch.nn.Linear(len(time_features_index),
+                                                     hidden_channels,
                                                      dtype=dtype)
+        torch.nn.init.xavier_uniform_(self.a.weight)
+        torch.nn.init.xavier_uniform_(self.time_mask_transformer.weight)
 
     def forward(self, x: torch.Tensor):
         dim = x.dim()
