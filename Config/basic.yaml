@@ -7,7 +7,7 @@ latitude_attribute_name: latitude
 elevation_attribute_name: elevation
 
 # The unit must be one of 'km' and 'm'.
-elevation_unit: "m"
+elevation_unit: m
 
 # dtype of the data and weight.
 dtype: float32
