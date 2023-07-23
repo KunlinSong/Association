@@ -13,7 +13,7 @@ class TimeTransformer:
 
     def __init__(self, config_hub: config.ConfigHub) -> None:
         self.basic_config = config_hub.basic_config
-        self.time = datetime.datetime(1970, 1, 1, 0, 0, 0, pytz.utc)
+        self.time = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
 
     def update_time(self, time_str: str) -> None:
         time = self.basic_config.strptime(time_str)
@@ -21,7 +21,7 @@ class TimeTransformer:
 
     @property
     def chinese_time(self) -> str:
-        chinese_tz = pytz.timezone('Asia/Beijing')
+        chinese_tz = pytz.timezone('Asia/Shanghai')
         return self.time.astimezone(chinese_tz)
 
     @property

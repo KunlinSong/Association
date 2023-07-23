@@ -65,7 +65,7 @@ class GraphLSTMCell(torch.nn.Module):
             h = torch.zeros(x.shape[0],
                             self.nodes,
                             self.hidden_size,
-                            dtype=self.dtype)
+                            dtype=self.dtype, device=self.w_i.d)
             c = torch.zeros(x.shape[0],
                             self.nodes,
                             self.hidden_size,

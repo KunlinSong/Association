@@ -164,8 +164,8 @@ class TrainingLog:
 
     def append(self, epoch: int, training_loss: float,
                validation_loss: float) -> None:
-        if not self.df['epoch']:
-            self.df.iloc[0] = [epoch, training_loss, validation_loss]
+        if self.df['epoch'].empty:
+            self.df.loc[0] = [epoch, training_loss, validation_loss]
         else:
             if epoch != (self.latest_epoch + 1):
                 raise ValueError(f'Epoch {epoch} is not the next epoch')
@@ -180,7 +180,8 @@ class TrainingLog:
 
     @property
     def latest_epoch(self) -> int:
-        return self.df['epoch'].iloc[-1]
+        return (int(self.df['epoch'].iloc[-1])
+                if len(self.df['epoch']) > 0 else 0)
 
     @property
     def best_epoch_info(self) -> tuple[int, float, float]:
@@ -197,6 +198,8 @@ class NodeTestLog:
 
     def __init__(self, dirname: str) -> None:
         self.dirname = dirname
+        if not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
         self.path = os.path.join(self.dirname, 'test_log.csv')
         if os.path.exists(self.path):
             self.df = pd.read_csv(self.path)
@@ -367,10 +370,10 @@ class TensorboardLog:
         self.writer = tensorboard.SummaryWriter(self.dirname)
 
     def add_graph(self, model: torch.nn.Module,
-                  input_shape: Sequence[int]) -> None:
+                  input_shape: Sequence[int], dtype, device) -> None:
         fake_input = torch.rand(*input_shape,
-                                dtype=model.dtype,
-                                device=model.device)
+                                dtype=dtype,
+                                device=device)
         self.writer.add_graph(model, fake_input)
 
     def append_loss(self, epoch: int, training_loss: float,
@@ -403,10 +406,9 @@ class LogHub:
         self.dirname = dirname
         if not os.path.exists(dirname):
             os.makedirs(dirname)
-        else:
-            config_hub = ConfigHub.from_log_hub(self.dirname)
         self.config_log = ConfigLog(self._get_log_dir(LogHub.CONFIG_FOLDER))
-        self.config_log.load_config_hub(config_hub)
+        if self.config_log.config_hub is None:
+            self.config_log.load_config_hub(config_hub)
         self.test_log = TestLog(
             self._get_log_dir(LogHub.TEST_FOLDER),
             self.config_log.config_hub.data_config.all_cities,

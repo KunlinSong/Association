@@ -46,7 +46,7 @@ class Dataset(data.Dataset):
         return city_data_lst
 
     def _get_keys(self) -> tuple[list[str], list[str], list[str]]:
-        all_keys = self.time_dict.keys()
+        all_keys = list(self.time_dict.keys())
         keys_num = len(all_keys)
         training_size = self.config_hub.data_config.get_training_size(keys_num)
         validation_size = self.config_hub.data_config.get_validation_size(
@@ -70,13 +70,18 @@ class Dataset(data.Dataset):
         input_lst = [city_data[0] for city_data in city_data_lst]
         target_lst = [city_data[1] for city_data in city_data_lst]
         target_data = []
+        input_lst = np.stack(input_lst)
+        target_lst = np.stack(target_lst)
+        input_lst = input_lst.transpose(1,0,2)
+        target_lst = target_lst.transpose(1,0,2)
         for i in range(self.config_hub.model_config.input_time_steps):
             add_data = target_lst[i:i + self.config_hub.model_config.
                                   predict_time_steps]
             target_data.append(np.mean(np.array(add_data), axis=0))
-        input_data = torch.tensor(input_lst, dtype=self.dtype)
-        target_data = torch.tensor(target_data, dtype=self.dtype)
-        return input_data, target_data
+        target_data = np.stack(target_data)
+        input_data = torch.from_numpy(input_lst)
+        target_data = torch.from_numpy(target_data)
+        return input_data.to(self.dtype), target_data.to(self.dtype)
 
     def __len__(self):
         if self.state == 'training':

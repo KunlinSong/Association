@@ -33,8 +33,10 @@ class TimeDict:
         for city in self.config_hub.data_config.all_cities:
             csv_path = os.path.join(self.data_dir, city, f'{city}.csv')
             df = pd.read_csv(csv_path)
-            df = df.dropna(subset=[self.config_hub.data_config.attributes])
-            time_str_lst = df[
+
+            time_str_lst = df.loc[
+                df[self.config_hub.data_config.attributes].notnull().all(
+                    axis=1),
                 self.config_hub.basic_config.time_attribute_name].tolist()
             time_lst = [
                 self.config_hub.basic_config.strptime(time_str)
@@ -105,10 +107,12 @@ class Location:
         ...
 
     def __init__(self, *args) -> None:
+        if len(args) == 1:
+            args = args[0]
         self.latitude = args[0]
         self.longitude = args[1]
         self.elevation = args[2]
-        self.point = Point(self.latitude, self.longitude, self.elevation)
+        self.point = Point(self.latitude, self.longitude)
 
     def distance_to(self, other: 'Location') -> float:
         flat_dist = distance.distance(self.point, other.point).m
@@ -120,8 +124,8 @@ class LocationCollection:
 
     def __init__(self, location_csv: str,
                  config_hub: config.ConfigHub) -> None:
-        df = pd.read_csv(location_csv)
-        self.locations = df[config_hub.data_config.all_cities, [
+        df = pd.read_csv(location_csv, index_col=0)
+        self.locations = df.loc[config_hub.data_config.all_cities, [
             config_hub.basic_config.latitude_attribute_name, config_hub.
             basic_config.longitude_attribute_name, config_hub.basic_config.
             elevation_attribute_name
@@ -143,8 +147,8 @@ class LocationCollection:
         city_num = self.locations.shape[0]
         distance_lst = []
         for i, j in zip(locations_1, locations_2):
-            location_i = Location(i)
-            location_j = Location(j)
+            location_i = Location(i.tolist())
+            location_j = Location(j.tolist())
             distance_lst.append(location_i.distance_to(location_j))
         return np.array(distance_lst).reshape(city_num, city_num)
 
@@ -164,7 +168,9 @@ class Data:
         self.data.drop(self.time_transformer.basic_config.time_attribute_name,
                        axis=1,
                        inplace=True)
-        self.time_attr_idx = self.data.columns.get_loc(self.time_attributes).tolist()
+        self.time_attr_idx = [
+            self.data.columns.get_loc(attr) for attr in self.time_attributes
+        ]
 
     def _get_value(self, time) -> list[float]:
         self.time_transformer.update_time(time)
@@ -189,8 +195,6 @@ class CityData:
         input_time, predict_time = self.time_dict[time]
         input_data = self.city_data.data[self.csv_data['time'].isin(
             input_time)]
-        input_data = input_data.drop(columns=['time']).values
         predict_data = self.city_data.data[self.csv_data['time'].isin(
             predict_time)]
-        predict_data = predict_data.drop(columns=['time']).values
-        return input_data, predict_data
+        return input_data.values, predict_data.values

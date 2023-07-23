@@ -85,13 +85,13 @@ class ModelConfig(Config):
                 if isinstance(mode, Dict) else None)
 
     def _get_rnn_mode(self) -> str:
-        mode = self._config['rnn_mode']
+        mode = self._config['RNN_mode']
         mode = list(mode.keys())[-1] if isinstance(mode, Dict) else mode
         assert mode in ModelConfig.RNN_MODES, f'Unknown RNN mode "{mode}".'
         return mode
 
     def _get_rnn_hidden_units(self) -> Optional[int]:
-        mode = self._config['rnn_mode']
+        mode = self._config['RNN_mode']
         return (int(mode.get(self.rnn_mode))
                 if isinstance(mode, Dict) else None)
 
