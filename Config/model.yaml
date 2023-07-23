@@ -12,11 +12,11 @@
 #  If the mode is GAT or INA, the value means the number of hidden channels.
 # Default to 32.
 association_mode: 
-  # null
+  null
   # GC: 1
   # GCN: null
   # GAT: 32
-  INA: 32
+  # INA: 32
 
 # The threshold of adjacency matrix.
 # Must be set when association mode is GC, GCN or GAT.

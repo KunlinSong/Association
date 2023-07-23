@@ -74,15 +74,15 @@ class Plot:
             os.makedirs(self.dirname)
         path = os.path.join(self.dirname, 'hexbin.png')
         fig, ax = plt.subplots(figsize=(5, 5), dpi=300)
+        ax.set_xlim(self.min_val, self.max_val)
+        ax.set_ylim(self.min_val, self.max_val)
+        ax.set_aspect('equal')
         ax.hexbin(self.true_val, self.pred_val, cmap='jet')
         cbar = fig.colorbar(ax.get_children()[0], ax=ax)
         cbar.set_label('Counts')
         ax.plot((self.min_val, self.min_val), (self.max_val, self.max_val),
-                color="white",
+                color="black",
                 label="Perfect Prediction")
-        ax.set_xlim(self.min_val, self.max_val)
-        ax.set_ylim(self.min_val, self.max_val)
-        ax.set_aspect('equal')
         ax.set_xlabel(f'Observed ({chr(0x03BC)}g/m{chr(0x00B3)})')
         ax.set_ylabel(f'Predicted ({chr(0x03BC)}g/m{chr(0x00B3)})')
         fig.savefig(path, dpi=300)
@@ -312,12 +312,12 @@ class TestLog:
         if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
         self.target_logs = {
-            target: os.path.join(self.dirname, target)
+            target: TargetTestLog(os.path.join(self.dirname, target), self.nodes)
             for target in self.targets
         }
 
     def __getitem__(self, target: str) -> TargetTestLog:
-        return TargetTestLog(self.target_logs[target], self.nodes)
+        return self.target_logs[target]
 
     def true_val(
             self,

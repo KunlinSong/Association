@@ -38,6 +38,8 @@ class Model(torch.nn.Module):
 
     def _init_model(self):
         if self.assoc_mode == 'GC':
+            if self.assoc_channels is None:
+                self.assoc_channels = 1
             self.assoc_layer = association.GC(
                 self.nodes,
                 self.in_features,
@@ -46,6 +48,8 @@ class Model(torch.nn.Module):
                 dist_threshold=self.adjacency_threshold)
             self.rnn_in_features = self.assoc_channels + self.in_features
         elif self.assoc_mode == 'GCN':
+            if self.assoc_channels is None:
+                self.assoc_channels = self.in_features
             self.assoc_layer = association.GCN(
                 self.nodes,
                 self.in_features,
@@ -54,19 +58,24 @@ class Model(torch.nn.Module):
                 dist_threshold=self.adjacency_threshold)
             self.rnn_in_features = self.assoc_channels
         elif self.assoc_mode == 'GAT':
+            if self.assoc_channels is None:
+                self.assoc_channels = 32
             self.assoc_layer = association.GAT(
                 self.nodes,
                 self.in_features,
                 self.assoc_channels,
                 self.dist_mat,
                 dist_threshold=self.adjacency_threshold)
-            self.rnn_in_features = self.in_features
+            self.rnn_in_features = self.assoc_channels
         elif self.assoc_mode == 'INA':
+            if self.assoc_channels is None:
+                self.assoc_channels = 32
             self.assoc_layer = association.INA(
                 self.nodes,
                 self.in_features,
                 self.assoc_channels,
                 self.location_mat,
+                self.time_features_index
             )
             self.rnn_in_features = self.in_features
         else:

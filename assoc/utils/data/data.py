@@ -196,5 +196,5 @@ class CityData:
         input_data = self.city_data.data[self.csv_data['time'].isin(
             input_time)]
         predict_data = self.city_data.data[self.csv_data['time'].isin(
-            predict_time)]
+            predict_time)][self.time_dict.config_hub.data_config.targets]
         return input_data.values, predict_data.values

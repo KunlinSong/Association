@@ -60,26 +60,30 @@ def main():
                              batch_size=batch_size,
                              shuffle=False,
                              num_workers=min(batch_size, os.cpu_count()))
+    dtype = getattr(torch, log_hub.config_log.config_hub.basic_config.dtype)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    location_collection.distance_matrix = location_collection.distance_matrix.astype(
+        log_hub.config_log.config_hub.basic_config.dtype)
+    location_collection.location_mat = location_collection.location_mat.astype(
+        log_hub.config_log.config_hub.basic_config.dtype)
 
     # get model
     model = log_hub.config_log.config_hub.get_model(
         location_collection.distance_matrix, dataset.time_attr_idx,
         location_collection.location_mat)
-    dtype = getattr(torch, log_hub.config_log.config_hub.basic_config.dtype)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(dtype)
     try:
         model.load_state_dict(log_hub.model_log.latest_state_dict)
         model = model.to(device)
     except FileNotFoundError:
         model = model.to(device)
-        log_hub.tensorboard_log.add_graph(
-            model,
-            (train_loader.batch_size,
-             log_hub.config_log.config_hub.model_config.input_time_steps,
-             len(log_hub.config_log.config_hub.data_config.all_cities),
-             len(log_hub.config_log.config_hub.data_config.attributes) + 4),
-            dtype, device)
+        # log_hub.tensorboard_log.add_graph(
+        #     model,
+        #     (train_loader.batch_size,
+        #      log_hub.config_log.config_hub.model_config.input_time_steps,
+        #      len(log_hub.config_log.config_hub.data_config.all_cities),
+        #      len(log_hub.config_log.config_hub.data_config.attributes) + 4),
+        #     dtype, device)
 
     loss = torch.nn.SmoothL1Loss()
     optimizer = torch.optim.Adam(
@@ -93,7 +97,7 @@ def main():
     patience = log_hub.config_log.config_hub.learning_config.early_stopping_patience
     print('Start Training...')
     for epoch in range(start, end + 1):
-        if epoch > 5:
+        if epoch > 1:
             break
         if (epoch - best_epoch) > patience:
             break
@@ -147,6 +151,7 @@ def main():
     true_values = []
     pred_values = []
     dataset.to_state('test')
+    model.load_state_dict(log_hub.model_log.best_state_dict)
     with torch.no_grad():
         for source_inputs, source_targets in test_loader:
             inputs = source_inputs.to(dtype).to(device)

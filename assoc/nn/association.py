@@ -28,11 +28,14 @@ class GC(torch.nn.Module):
         self.k = k
         self.feature_last = feature_last
         self.dtype = dtype
-        within_threshold = (dist_mat > 0) & (dist_mat < dist_threshold)
-        self.edge_mat = within_threshold / (dist_mat + eps)
+        self.edge_mat = ((dist_mat > 0) & (dist_mat < dist_threshold)).to(
+            torch.int64)
+        # within_threshold = (dist_mat > 0) & (dist_mat < dist_threshold)
+        # self.edge_mat = within_threshold / (dist_mat + eps)
         self.conv = ChebConv(in_channels, add_channels, K=k)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        self.edge_mat = self.edge_mat.to(x.device)
         dim = x.dim()
         assert dim in (2, 3), (
             f'{self.__class__.__name__}: Expected x to be 2-D or 3-D, but '
@@ -80,12 +83,14 @@ class GCN(torch.nn.Module):
             (dist_mat < dist_threshold)).to(dtype if dtype else torch.float)
         self.adj_mat.fill_diagonal_(1)
         self.neighbors = self.adj_mat.sum(dim=-1, keepdims=True)
-        self.projection = torch.nn.Linear(in_features=in_channels,
-                                          out_features=out_channels,
+        self.projection = torch.nn.Linear(in_features=self.in_channels,
+                                          out_features=self.out_channels,
                                           dtype=dtype)
         torch.nn.init.xavier_uniform_(self.projection.weight)
 
     def forward(self, x: torch.Tensor):
+        self.adj_mat = self.adj_mat.to(x.device)
+        self.neighbors = self.neighbors.to(x.device)
         dim = x.dim()
         assert dim in (2, 3), (
             f'{self.__class__.__name__}: Expected x to be 2-D or 3-D, but '
@@ -138,6 +143,7 @@ class GAT(torch.nn.Module):
         torch.nn.init.xavier_uniform_(self.a.weight)
 
     def forward(self, x: torch.Tensor):
+        self.adj_mat = self.adj_mat.to(x.device)
         dim = x.dim()
         assert dim in (2, 3), (
             f'{self.__class__.__name__}: Expected x to be 2-D or 3-D, but '
@@ -199,6 +205,9 @@ class INA(torch.nn.Module):
         self.a = torch.nn.Linear(in_features=location_mat.shape[-1] * 2,
                                  out_features=hidden_channels,
                                  dtype=dtype)
+        self.dense = torch.nn.Linear(in_features=hidden_channels,
+                                     out_features=1,
+                                     dtype=dtype)
         self.leakyrelu = torch.nn.LeakyReLU(alpha)
         self.time_mask_transformer = torch.nn.Linear(len(time_features_index),
                                                      hidden_channels,
@@ -223,9 +232,13 @@ class INA(torch.nn.Module):
         x_time = x[:, 0, self.time_features_index]
         time_mask = self.time_mask_transformer(x_time)
         time_mask = F.sigmoid(time_mask)
+        time_mask = time_mask.unsqueeze(1)
 
+        self.location_cat_mat = self.location_cat_mat.to(x.device)
         assoc_mat = self.a(self.location_cat_mat)
+        assoc_mat = assoc_mat.unsqueeze(0)
         assoc_mat = assoc_mat * time_mask
+        assoc_mat = self.dense(assoc_mat)
         assoc_mat = self.leakyrelu(assoc_mat)
         assoc_mat = assoc_mat.reshape(-1, self.nodes, self.nodes)
         return F.softmax(assoc_mat, dim=-1)

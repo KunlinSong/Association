@@ -81,7 +81,12 @@ class ModelConfig(Config):
 
     def _get_association_channels(self) -> Optional[int]:
         mode = self.get('association_mode')
-        return (int(mode.get(self.association_mode))
+        if mode is None:
+            return None
+        if (channels := mode.get(self.association_mode)) is None:
+            return None
+        else:
+            return (int(channels)
                 if isinstance(mode, Dict) else None)
 
     def _get_rnn_mode(self) -> str:
