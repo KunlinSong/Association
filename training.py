@@ -70,9 +70,9 @@ def main():
     model = model.to(dtype)
     try:
         model.load_state_dict(log_hub.model_log.latest_state_dict)
-        model.to(device)
+        model = model.to(device)
     except FileNotFoundError:
-        model.to(device)
+        model = model.to(device)
         log_hub.tensorboard_log.add_graph(
             model,
             (train_loader.batch_size,
@@ -161,9 +161,8 @@ def main():
     print('Testing Finished!')
     print('Saving Results...')
     for target_idx, (true_value,
-              pred_value) in enumerate(zip(true_values, pred_values)):
-        target = log_hub.config_log.config_hub.data_config.targets[
-            target_idx]
+                     pred_value) in enumerate(zip(true_values, pred_values)):
+        target = log_hub.config_log.config_hub.data_config.targets[target_idx]
         for node_idx, (true_target_value, pred_target_value) in enumerate(
                 zip(true_value, pred_value)):
             node = log_hub.config_log.config_hub.data_config.all_cities[

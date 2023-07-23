@@ -175,10 +175,10 @@ class Data:
     def _get_value(self, time) -> list[float]:
         self.time_transformer.update_time(time)
         values = [
-            getattr(self.time_transformer, attribute)()
+            getattr(self.time_transformer, attribute)
             for attribute in self.time_attributes
         ]
-        return values
+        return pd.Series(values)
 
 
 class CityData:

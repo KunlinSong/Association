@@ -53,7 +53,7 @@ class GraphLSTMCell(torch.nn.Module):
             f'received {dim}-D')
         if not self.feature_last:
             x = x.transpose(-1, -2)
-        shape = x.dim()
+        shape = x.shape
         assert (shape[-2:] == (self.nodes, self.input_size)), (
             f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
             f' (*, {self.nodes}, {self.input_size}), but received {shape}')
@@ -65,11 +65,13 @@ class GraphLSTMCell(torch.nn.Module):
             h = torch.zeros(x.shape[0],
                             self.nodes,
                             self.hidden_size,
-                            dtype=self.dtype, device=self.w_i.d)
+                            dtype=self.dtype)
             c = torch.zeros(x.shape[0],
                             self.nodes,
                             self.hidden_size,
                             dtype=self.dtype)
+            h = h.to(x.device)
+            c = c.to(x.device)
         else:
             h, c = state if is_batched else (torch.unsqueeze(state[0], 0),
                                              torch.unsqueeze(state[1], 0))
@@ -123,7 +125,7 @@ class GraphGRUCell(torch.nn.Module):
             f'received {dim}-D')
         if not self.feature_last:
             x = x.transpose(-1, -2)
-        shape = x.dim()
+        shape = x.shape
         assert (shape[-2:] == (self.nodes, self.input_size)), (
             f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
             f' (*, {self.nodes}, {self.input_size}), but received {shape}')
@@ -136,6 +138,7 @@ class GraphGRUCell(torch.nn.Module):
                             self.nodes,
                             self.hidden_size,
                             dtype=self.dtype)
+            h = h.to(x.device)
         else:
             h = state[0] if is_batched else torch.unsqueeze(state[0], 0)
 
@@ -182,7 +185,7 @@ class GraphRNNCell(torch.nn.Module):
             f'received {dim}-D')
         if not self.feature_last:
             x = x.transpose(-1, -2)
-        shape = x.dim()
+        shape = x.shape
         assert (shape[-2:] == (self.nodes, self.input_size)), (
             f'{self.__class__.__name__}: Expected x to be torch.Tensor of shape'
             f' (*, {self.nodes}, {self.input_size}), but received {shape}')
@@ -195,6 +198,7 @@ class GraphRNNCell(torch.nn.Module):
                             self.nodes,
                             self.hidden_size,
                             dtype=self.dtype)
+            h = h.to(x.device)
         else:
             h = state[0] if is_batched else torch.unsqueeze(state[0], 0)
 
