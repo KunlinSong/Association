@@ -1,0 +1,85 @@
+Start:
+  year:   2019
+  month:  1
+  day:    1
+  hour:   0
+  minute: 0
+  second: 0
+
+End:
+  year:   2019
+  month:  12
+  day:    31
+  hour:   23
+  minute: 0
+  second: 0
+
+ModifyCities: # You can change the value of these cities to modify the concentration
+              # of the pollutants of them.
+  # 2 municipalities.
+  Beijing:      1
+  Tianjin:      1
+  # 26 other cities.
+  Anyang:       1
+  Baoding:      1
+  Binzhou:      1
+  Cangzhou:     1
+  Changzhi:     1
+  Dezhou:       1
+  Handan:       1
+  Hebi:         1
+  Hengshui:     1
+  Heze:         1
+  Jiaozuo:      1
+  Jinan:        1
+  Jincheng:     1
+  Jining:       1
+  Kaifeng:      1
+  Langfang:     1
+  Liaocheng:    1
+  Puyang:       1
+  Shijiazhuang: 1
+  Taiyuan:      1
+  Tangshan:     1
+  Xingtai:      1
+  Xinxiang:     1
+  Yangquan:     1
+  Zhengzhou:    1
+  Zibo:         1
+  # 28 surrounding cities.
+  Chengde:      1
+  Datong:       1
+  Dongying:     1
+  Jinzhong:     1
+  Linfen:       1
+  Linyi:        1
+  Luohe:        1
+  Luoyang:      1
+  Lvliang:      1
+  Nanyang:      1
+  Pingdingshan: 1
+  Qinhuangdao:  1
+  Rizhao:       1
+  Sanmenxia:    1
+  Shangqiu:     1
+  Shuozhou:     1
+  Suzhou:       1
+  Taian:        1
+  Weifang:      1
+  Xinyang:      1
+  Xinzhou:      1
+  Xuchang:      1
+  Xuzhou:       1
+  Yuncheng:     1
+  Zaozhuang:    1
+  Zhangjiakou:  1
+  Zhoukou:      1
+  Zhumadian:    1
+
+ModifyPollutants: # Pollutants attributes with their concentration factor.
+  CO:    1
+  NO2:   1
+  O3:    1
+  PM10:  1
+  PM2.5: 1
+  SO2:   1

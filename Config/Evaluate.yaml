@@ -1,0 +1,68 @@
+EvaluateCities: # Cities to be inputted into the model.s
+# 2 municipalities.
+- Beijing
+- Tianjin
+# 26 other cities.
+- Anyang 
+- Baoding
+- Binzhou
+- Cangzhou
+- Changzhi
+- Dezhou
+- Handan
+- Hebi
+- Hengshui
+- Heze
+- Jiaozuo
+- Jinan
+- Jincheng
+- Jining
+- Kaifeng
+- Langfang
+- Liaocheng
+- Puyang
+- Shijiazhuang
+- Taiyuan
+- Tangshan
+- Xingtai
+- Xinxiang
+- Yangquan
+- Zhengzhou
+- Zibo
+# 28 surrounding cities.
+# - Chengde
+# - Datong
+# - Dongying
+# - Jinzhong
+# - Linfen
+# - Linyi
+# - Luohe
+# - Luoyang
+# - Lvliang
+# - Nanyang
+# - Pingdingshan
+# - Qinhuangdao
+# - Rizhao
+# - Sanmenxia
+# - Shangqiu
+# - Shuozhou
+# - Suzhou
+# - Taian
+# - Weifang
+# - Xinyang
+# - Xinzhou
+# - Xuchang
+# - Xuzhou
+# - Yuncheng
+# - Zaozhuang
+# - Zhangjiakou
+# - Zhoukou
+# - Zhumadian
+
+EvaluateTargets: # The target attribute names of the model.
+# - CO
+# - NO2
+- O3
+# - PM10
+# - PM2.5
+# - SO2

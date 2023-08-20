@@ -1,0 +1,5 @@
+BatchSize:             64
+LearningRate:          0.01
+WeightDecay:           1e-4
+MaxEpoch:              10000
+EarlyStoppingPatience: 20

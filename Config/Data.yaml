@@ -1,0 +1,101 @@
+InputCities: # Cities to be inputted into the model.s
+# 2 municipalities.
+- Beijing
+- Tianjin
+# 26 other cities.
+- Anyang 
+- Baoding
+- Binzhou
+- Cangzhou
+- Changzhi
+- Dezhou
+- Handan
+- Hebi
+- Hengshui
+- Heze
+- Jiaozuo
+- Jinan
+- Jincheng
+- Jining
+- Kaifeng
+- Langfang
+- Liaocheng
+- Puyang
+- Shijiazhuang
+- Taiyuan
+- Tangshan
+- Xingtai
+- Xinxiang
+- Yangquan
+- Zhengzhou
+- Zibo
+# 28 surrounding cities.
+- Chengde
+- Datong
+- Dongying
+- Jinzhong
+- Linfen
+- Linyi
+- Luohe
+- Luoyang
+- Lvliang
+- Nanyang
+- Pingdingshan
+- Qinhuangdao
+- Rizhao
+- Sanmenxia
+- Shangqiu
+- Shuozhou
+- Suzhou
+- Taian
+- Weifang
+- Xinyang
+- Xinzhou
+- Xuchang
+- Xuzhou
+- Yuncheng
+- Zaozhuang
+- Zhangjiakou
+- Zhoukou
+- Zhumadian
+
+InputAttributes: # Attributes to be inputted into the model.
+- time      # Attention: the time attribute will be used to calculate 5 time 
+            # features to be inputted into the model.
+- longitude
+- latitude
+- u10       # 10m u-component of wind
+- v10       # 10m v-component of wind
+- t2m       # 2m temperature
+- blh       # Boundary layer height
+- uvb       # Downward UV radiation at the surface
+- kx        # K index
+- msl       # Mean sea level pressure
+- sp        # Surface pressure
+- tcc       # Total cloud cover
+- tclw      # Total column cloud liquid water
+- tp        # Total precipitation
+- r         # Relative humidity
+- u         # U-component of wind
+- v         # V-component of wind
+- CO
+- NO2
+- O3
+- O3_8h
+- PM10
+- PM2.5
+- SO2
+
+
+Targets: # The target attribute names of the model.
+# - CO
+# - NO2
+- O3
+# - PM10
+# - PM2.5
+# - SO2
+
+DatasetSplit: # The split ratio of training set, validation set and test set.
+  Training:   0.6
+  Validation: 0.2
+  Test:       0.2

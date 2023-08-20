@@ -1,0 +1,8 @@
+TimeFormat: "%Y-%m-%d %H:%M:%S" # The time format of the data.
+
+TimeAttribute: time       # The time attribute name in all data to be inputted.
+LongitudeAttribute: longitude   # The longitude attribute name in location.csv.
+LatitudeAttribute: latitude     # The latitude attribute name in location.csv.
+ElevationAttribute: elevation   # The elevation attribute name in location.csv.
+
+DType: float32                  # dtype of the data and weight.

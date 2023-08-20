@@ -1,0 +1,25 @@
+Start:
+  year:   2019
+  month:  5
+  day:    1
+  hour:   0
+  minute: 0
+  second: 0
+
+End:
+  year:   2019
+  month:  5
+  day:    31
+  hour:   0
+  minute: 0
+  second: 0
+
+TimeSegment: # The time segment of a day.
+  Start:
+    hour:   11
+    minute: 0
+    second: 0
+  End:
+    hour:   13
+    minute: 0
+    second: 0

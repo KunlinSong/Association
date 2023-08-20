@@ -1,0 +1,22 @@
+AssociationMode: 
+  null  # No Association layer will be used.
+  # GC: 1 # Association layer from GC-LSTM, the value is the number of channels to add to the input.
+  # GCN: null   # The value is the number of channels of the output of GCN. 
+                # If null, the value is the number of channels of the input.
+  # GAT: 32     # The value is the number of the hidden units of GAT.
+  # INA: 32     # The value is the number of the hidden units of INA.
+
+# Must be set when AssociationMode is GC, GCN or GAT.
+Threshold: 2e5 # The threshold of adjacency matrix in "meters".
+
+RNNMode: # The value is the number of hidden units.
+  # RNN: 64
+  # LSTM: 64
+  GRU: 64
+
+# The parameters following use "hours" as the unit.
+InputTimeStep:   24 # The number of time steps of the input data.
+TimeInterval:    1  # The interval between two time steps of the input data.
+PredictInterval: 1  # The interval between each time step of the input data 
+                    # and the time step of the target data.
+PredictAverage:  1  # The number of time steps of the target data to be averaged.
