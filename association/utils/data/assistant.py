@@ -50,7 +50,7 @@ class TimeDict:
         target_map = [
             (self.time_interval * (i + self.config_hub.predict_interval))
             for i in range(self.config_hub.input_time_step +
-                           self.config_hub.predict_average)
+                           self.config_hub.predict_average - 1)
         ]
         return input_map, target_map
 

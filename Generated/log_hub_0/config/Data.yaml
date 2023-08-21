@@ -1,0 +1,35 @@
+InputCities:
+- Beijing
+- Tianjin
+- Anyang
+InputAttributes:
+- time
+- longitude
+- latitude
+- u10
+- v10
+- t2m
+- blh
+- uvb
+- kx
+- msl
+- sp
+- tcc
+- tclw
+- tp
+- r
+- u
+- v
+- CO
+- NO2
+- O3
+- O3_8h
+- PM10
+- PM2.5
+- SO2
+Targets:
+- O3
+DatasetSplit:
+  Training: 0.6
+  Validation: 0.2
+  Test: 0.2

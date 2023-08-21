@@ -1,6 +1,6 @@
 AssociationMode: 
-  null  # No Association layer will be used.
-  # GC: 1 # Association layer from GC-LSTM, the value is the number of channels to add to the input.
+  # null  # No Association layer will be used.
+  GC: 1 # Association layer from GC-LSTM, the value is the number of channels to add to the input.
   # GCN: null   # The value is the number of channels of the output of GCN. 
                 # If null, the value is the number of channels of the input.
   # GAT: 32     # The value is the number of the hidden units of GAT.

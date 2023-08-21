@@ -1,0 +1,9 @@
+AssociationMode:
+  GC: 1
+Threshold: 2e5
+RNNMode:
+  GRU: 64
+InputTimeStep: 24
+TimeInterval: 1
+PredictInterval: 1
+PredictAverage: 1

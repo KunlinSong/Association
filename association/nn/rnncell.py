@@ -15,9 +15,9 @@ def _get_gate_params(
         input_size (int): Number of input features.
         hidden_size (int): Number of hidden features.
         dtype (torch.dtype): Data type."""
-    return (Weight(input_size, hidden_size,
-                   dtype=dtype), Weight(hidden_size, hidden_size, dtype=dtype),
-            Bias(hidden_size, dtype=dtype))
+    return (Weight((input_size, hidden_size),
+                   dtype=dtype), Weight((hidden_size, hidden_size), dtype=dtype),
+            Bias((hidden_size,), dtype=dtype))
 
 
 class GraphLSTMCell(torch.nn.Module):

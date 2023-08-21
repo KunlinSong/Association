@@ -48,7 +48,7 @@ class TrainingLog:
     @property
     def best_epoch_info(self) -> tuple[int, float]:
         if self.df.empty:
-            return (0, float('inf'), float('inf'))
+            return (0, float('inf'))
         else:
             best_idx = self.df[VALIDATION_LOSS_COL].idxmin()
             return (self.df[EPOCH_COL].iloc[best_idx],
